@@ -44,7 +44,7 @@ export function InfiniteCards() {
 
       <div className="relative z-10">
         <div className="text-center mb-16 px-6">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 text-display">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 text-display font-sora">
             Technical <span className="text-slate-400">Expertise</span>
           </h2>
           <p className="text-slate-500 max-w-2xl mx-auto text-sm tracking-wide">

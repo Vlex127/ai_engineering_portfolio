@@ -16,9 +16,12 @@
   --color-foreground: var(--foreground);
   --color-primary: var(--color-primary);
   --color-accent: var(--color-accent-cool);
-  --font-display: 'Clash Display', sans-serif;
-  --font-sans: 'Satoshi', sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  --font-display: 'Clash Display', var(--font-playfair), sans-serif;
+  --font-sans: 'Satoshi', var(--font-plus-jakarta), sans-serif;
+  --font-mono: 'Space Mono', var(--font-geist-mono), monospace;
+  --font-sora: var(--font-sora);
+  --font-playfair: var(--font-playfair);
+  --font-plus-jakarta: var(--font-plus-jakarta);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,6 +60,26 @@ body {
     font-family: 'Clash Display', sans-serif;
     font-weight: 700;
     letter-spacing: -0.02em;
+  }
+
+  .font-playfair {
+    font-family: var(--font-playfair, 'Playfair Display', serif);
+  }
+
+  .font-sora {
+    font-family: var(--font-sora, 'Sora', sans-serif);
+  }
+
+  .font-plus-jakarta {
+    font-family: var(--font-plus-jakarta, 'Plus Jakarta Sans', sans-serif);
+  }
+
+  .font-satoshi {
+    font-family: 'Satoshi', sans-serif;
+  }
+
+  .font-clash {
+    font-family: 'Clash Display', sans-serif;
   }
   
   .glass-effect {

@@ -111,10 +111,23 @@ export function HeroSection() {
         {/* Premium Main Heading */}
         <motion.h1
           variants={itemVariants}
-          className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight text-display"
+          className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight font-playfair"
         >
           Vincent Iwuno
         </motion.h1>
+
+        {/* Bio Section */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-12 max-w-2xl mx-auto"
+        >
+          <p className="text-base text-slate-300 leading-relaxed mb-3">
+            AI engineer with 5+ years building production ML systems. I specialize in turning raw data into intelligent systems using Generative AI, RAG architectures, and scalable data pipelines. Passionate about closing the gap between research and real-world impact.
+          </p>
+          <p className="text-sm text-slate-500">
+            📍 Lagos, Nigeria • Remote-first
+          </p>
+        </motion.div>
 
         {/* Subtitle with better hierarchy */}
         <motion.div
@@ -205,20 +218,21 @@ export function HeroSection() {
           className="grid grid-cols-3 gap-6 max-w-3xl mx-auto pt-8 border-t border-slate-800"
         >
           {[
-            { value: '10M+', label: 'Records Processed' },
-            { value: '20+', label: 'AI Projects' },
-            { value: '40%', label: 'Accuracy Improvement' },
+            { value: '10M+', label: 'Records Processed', link: '#data-pipeline' },
+            { value: '20+', label: 'AI Projects', link: '#projects' },
+            { value: '40%', label: 'Accuracy Improvement', link: '#rag-enterprise' },
           ].map((stat, i) => (
-            <motion.div
+            <motion.a
               key={i}
+              href={stat.link}
               whileHover={{ scale: 1.05 }}
-              className="py-6 text-center"
+              className="py-6 text-center cursor-pointer transition-all hover:bg-slate-800/30 rounded-lg"
             >
               <div className="text-2xl md:text-3xl font-bold text-white mb-1">
                 {stat.value}
               </div>
               <div className="text-xs text-slate-500 font-medium tracking-wide uppercase">{stat.label}</div>
-            </motion.div>
+            </motion.a>
           ))}
         </motion.div>
       </motion.div>

@@ -33,7 +33,7 @@ export function CTASection() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-playfair">
             Ready to Build <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">Something Amazing?</span>
           </h2>
           <p className="text-lg text-white/60 mb-8 max-w-2xl mx-auto">
