@@ -1,28 +1,122 @@
 'use client'
+// @ts-nocheck
 
-import { motion, useMotionValue, useTransform } from 'framer-motion'
-import { ArrowRight, Sparkles, Code2, Brain, Zap } from 'lucide-react'
-import { useRef, useEffect } from 'react'
+import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion'
+import { ArrowRight, Brain, Code2, Zap, Sparkles } from 'lucide-react'
+import { useRef, useEffect, useState } from 'react'
+import { Spotlight } from './ui/spotlight'
 
-export function HeroSection() {
-  // Mouse tracking for parallax effect
-  const mouseX = useMotionValue(0)
-  const mouseY = useMotionValue(0)
-  const parallaxX = useTransform(mouseX, [-1000, 1000], [-20, 20])
-  const parallaxY = useTransform(mouseY, [-1000, 1000], [-20, 20])
-  
-  const containerRef = useRef<HTMLDivElement>(null)
+function ThreeDCard({
+  children,
+  className = '',
+}: {
+  children: React.ReactNode
+  className?: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
+  const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    setIsMobile(window.innerWidth < 768)
+    const onResize = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  const rotateX = useSpring(useTransform(y, [-0.5, 0.5], [12, -12]), {
+    stiffness: 300,
+    damping: 30,
+  })
+  const rotateY = useSpring(useTransform(x, [-0.5, 0.5], [-12, 12]), {
+    stiffness: 300,
+    damping: 30,
+  })
+  const glowX = useTransform(x, [-0.5, 0.5], [0, 100])
+  const glowY = useTransform(y, [-0.5, 0.5], [0, 100])
+
+  function handleMouse(e: React.MouseEvent<HTMLDivElement>) {
+    if (!ref.current || isMobile) return
+    const rect = ref.current.getBoundingClientRect()
+    const px = (e.clientX - rect.left) / rect.width - 0.5
+    const py = (e.clientY - rect.top) / rect.height - 0.5
+    x.set(px)
+    y.set(py)
+  }
+
+  function handleLeave() {
+    x.set(0)
+    y.set(0)
+  }
+
+  const glowBackground = useTransform(
+    [glowX, glowY],
+    ([gx, gy]) =>
+      `radial-gradient(circle at ${gx}% ${gy}%, rgba(99,102,241,0.25) 0%, transparent 70%)`
+  )
+
+  return (
+    <motion.div
+      ref={ref}
+      onMouseMove={handleMouse}
+      onMouseLeave={handleLeave}
+      style={isMobile ? {} : { rotateX, rotateY, transformStyle: 'preserve-3d' }}
+      className={`relative ${className}`}
+    >
+      {!isMobile && (
+        <motion.div
+          className="pointer-events-none absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{
+            background: glowBackground,
+          }}
+        />
+      )}
+      {children}
+    </motion.div>
+  )
+}
+
+const features = [
+  {
+    icon: Brain,
+    title: 'Generative AI',
+    description: 'LLM integration & fine-tuning',
+    color: 'from-violet-600 to-purple-600',
+    glow: 'rgba(139,92,246,0.4)',
+  },
+  {
+    icon: Code2,
+    title: 'Data Engineering',
+    description: 'ETL pipelines at scale',
+    color: 'from-blue-600 to-cyan-600',
+    glow: 'rgba(59,130,246,0.4)',
+  },
+  {
+    icon: Zap,
+    title: 'RAG Systems',
+    description: 'Knowledge-grounded AI',
+    color: 'from-cyan-500 to-teal-500',
+    glow: 'rgba(6,182,212,0.4)',
+  },
+]
+
+export function HeroSection() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const parallaxX = useTransform(mouseX, [-800, 800], [-30, 30])
+  const parallaxY = useTransform(mouseY, [-800, 800], [-15, 15])
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
     const handleMouseMove = (e: MouseEvent) => {
       if (!containerRef.current) return
       const rect = containerRef.current.getBoundingClientRect()
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      mouseX.set(e.clientX - rect.left - centerX)
-      mouseY.set(e.clientY - rect.top - centerY)
+      mouseX.set(e.clientX - rect.left - rect.width / 2)
+      mouseY.set(e.clientY - rect.top - rect.height / 2)
     }
-
     window.addEventListener('mousemove', handleMouseMove)
     return () => window.removeEventListener('mousemove', handleMouseMove)
   }, [mouseX, mouseY])
@@ -31,228 +125,219 @@ export function HeroSection() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.12,
-        delayChildren: 0.1,
-      },
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
     },
   }
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 25 },
+    hidden: { opacity: 0, y: 30 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease: [0.23, 1, 0.82, 1] },
-    },
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 40, scale: 0.85 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: { duration: 0.9, ease: [0.23, 1, 0.82, 1] },
-    },
-    hover: {
-      y: -15,
-      rotateX: 5,
-      rotateY: -5,
-      boxShadow: '0 25px 50px rgba(99, 102, 241, 0.25)',
+      transition: { duration: 0.9, ease: 'easeOut' },
     },
   }
 
   return (
-    <div ref={containerRef} className="relative min-h-screen overflow-hidden bg-black flex items-center justify-center grain-overlay">
-      {/* Subtle Background Gradient */}
+    <div
+      ref={containerRef}
+      className="relative min-h-screen overflow-hidden bg-[#030303] flex items-center justify-center"
+    >
+      {/* Spotlight — hidden on mobile for performance */}
+      <Spotlight className="hidden md:block -top-40 left-0 md:left-60 md:-top-20" fill="#a855f7" />
+      <Spotlight className="hidden md:block top-10 right-0" fill="#3b82f6" />
+
+      {/* Aurora orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/50 via-black to-black" />
         <motion.div
           style={{ x: parallaxX, y: parallaxY }}
-          className="absolute top-1/4 -left-64 w-96 h-96 bg-slate-700/20 rounded-full filter blur-3xl"
-          animate={{
-            scale: [1, 1.05, 1],
-          }}
-          transition={{ duration: 15, repeat: Infinity }}
-        />
+          className="absolute top-1/4 -left-40 w-[300px] h-[300px] md:w-[500px] md:h-[500px] rounded-full"
+          animate={{ scale: [1, 1.08, 1] }}
+          transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className="w-full h-full bg-gradient-radial from-violet-600/20 via-purple-500/10 to-transparent rounded-full blur-3xl" />
+        </motion.div>
         <motion.div
-          style={{ x: useTransform(parallaxX, (v) => v * 0.5), y: useTransform(parallaxY, (v) => v * 0.5) }}
-          className="absolute top-1/3 -right-64 w-96 h-96 bg-slate-700/10 rounded-full filter blur-3xl"
-          animate={{
-            scale: [1.05, 1, 1.05],
+          className="absolute top-1/3 -right-40 w-[250px] h-[250px] md:w-[600px] md:h-[600px] rounded-full"
+          animate={{ scale: [1.05, 1, 1.05] }}
+          transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut', delay: 2 }}
+        >
+          <div className="w-full h-full bg-gradient-radial from-blue-600/15 via-cyan-500/8 to-transparent rounded-full blur-3xl" />
+        </motion.div>
+
+        {/* Grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
           }}
-          transition={{ duration: 18, repeat: Infinity, delay: 1 }}
         />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,#030303_80%)]" />
       </div>
 
-      {/* Content Overlay */}
+      {/* Content */}
       <motion.div
-        className="relative z-10 max-w-6xl mx-auto px-6 pt-32 text-center"
+        className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-16 text-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Premium Badge */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-10 inline-block"
-        >
-          <motion.div 
-            className="px-6 py-2.5 rounded-full border border-slate-600/50 bg-slate-900/30 backdrop-blur-md hover:border-slate-500 transition-colors"
-            whileHover={{ scale: 1.03 }}
+        {/* Badge */}
+        <motion.div variants={itemVariants} className="mb-8 inline-flex">
+          <motion.div
+            className="relative group"
+            whileHover={{ scale: 1.05 }}
           >
-            <div className="flex items-center gap-2.5 text-xs tracking-wide text-slate-300 font-medium">
-              <span>AI ENGINEERING & ML SOLUTIONS</span>
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-violet-600 to-blue-600 rounded-full opacity-50 group-hover:opacity-80 blur-sm transition-opacity duration-300" />
+            <div className="relative flex items-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 rounded-full bg-black/80 border border-white/10 backdrop-blur-xl">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+              >
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-violet-400" />
+              </motion.div>
+              <span className="text-[10px] sm:text-xs tracking-widest text-white/70 font-medium uppercase">
+                AI Engineering & ML Solutions
+              </span>
             </div>
           </motion.div>
         </motion.div>
 
-        {/* Premium Main Heading */}
-        <motion.h1
-          variants={itemVariants}
-          className="text-6xl md:text-8xl font-bold text-white mb-4 leading-tight font-playfair"
-        >
-          Vincent Iwuno
-        </motion.h1>
+        {/* Heading — responsive font sizes */}
+        <motion.div variants={itemVariants} className="mb-4 sm:mb-6">
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-bold leading-[0.9] tracking-tight font-playfair">
+            <span className="block text-white">Vincent</span>
+            <span className="block bg-gradient-to-r from-violet-400 via-fuchsia-400 to-blue-400 bg-clip-text text-transparent">
+              Iwuno
+            </span>
+          </h1>
+        </motion.div>
 
-        {/* Bio Section */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-12 max-w-2xl mx-auto"
-        >
-          <p className="text-base text-slate-300 leading-relaxed mb-3">
-            AI engineer with 5+ years building production ML systems. I specialize in turning raw data into intelligent systems using Generative AI, RAG architectures, and scalable data pipelines. Passionate about closing the gap between research and real-world impact.
-          </p>
-          <p className="text-sm text-slate-500">
-            📍 Lagos, Nigeria • Remote-first
+        {/* Subtitle — stack on mobile */}
+        <motion.div variants={itemVariants} className="mb-8 sm:mb-12">
+          <p className="text-xs sm:text-base md:text-lg text-white/40 font-light tracking-[0.2em] sm:tracking-[0.3em] uppercase flex flex-wrap justify-center gap-x-2 gap-y-1 sm:block">
+            <span>Data Engineering</span>
+            <span className="hidden sm:inline">&nbsp;·&nbsp;</span>
+            <span className="sm:hidden">·</span>
+            <span>Generative AI</span>
+            <span className="hidden sm:inline">&nbsp;·&nbsp;</span>
+            <span className="sm:hidden">·</span>
+            <span>RAG Architectures</span>
+            <span className="hidden sm:inline">&nbsp;·&nbsp;</span>
+            <span className="sm:hidden">·</span>
+            <span>LLM Optimization</span>
           </p>
         </motion.div>
 
-        {/* Subtitle with better hierarchy */}
-        <motion.div
-          variants={itemVariants}
-          className="mb-16 max-w-3xl mx-auto"
-        >
-          <p className="text-lg text-slate-400 mb-6 font-light leading-relaxed">
-            AI Engineer specializing in production systems
+        {/* Bio */}
+        <motion.div variants={itemVariants} className="mb-10 sm:mb-16 max-w-xl mx-auto px-2">
+          <p className="text-sm sm:text-base md:text-lg text-white/60 leading-relaxed">
+            AI engineer with <span className="text-white font-medium">5+ years</span> building production ML systems. I turn raw data into intelligent systems using Generative AI, RAG architectures, and scalable pipelines.
           </p>
-          <p className="text-sm md:text-base text-slate-500 font-light tracking-wide">
-            Data Engineering • Generative AI • RAG Architectures • LLM Optimization
-          </p>
+          <p className="mt-3 text-xs sm:text-sm text-white/30">📍 Lagos, Nigeria · Remote-first</p>
         </motion.div>
 
-        {/* Premium Feature Cards */}
-        <motion.div
-          variants={itemVariants}
-          className="grid md:grid-cols-3 gap-5 mb-16"
-        >
-          {[
-            {
-              icon: Brain,
-              title: 'Generative AI',
-              description: 'LLM integration & fine-tuning',
-            },
-            {
-              icon: Code2,
-              title: 'Data Engineering',
-              description: 'ETL pipelines at scale',
-            },
-            {
-              icon: Zap,
-              title: 'RAG Systems',
-              description: 'Knowledge-grounded AI',
-            },
-          ].map((feature, i) => {
+        {/* 3D Feature Cards — single col mobile, 3-col desktop */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5 mb-10 sm:mb-16">
+          {features.map((feature, i) => {
             const Icon = feature.icon
             return (
-              <motion.div
-                key={i}
-                variants={cardVariants}
-                whileHover="hover"
-                className="relative p-6 rounded-lg border border-slate-700/50 bg-slate-900/40 backdrop-blur-sm hover:border-slate-600 transition-colors group overflow-hidden"
-              >
-                <div className="relative z-10">
-                  <motion.div 
-                    className="mb-4 inline-block p-2.5 rounded-lg bg-slate-800/60 group-hover:bg-slate-700/60 transition-colors text-slate-300 group-hover:text-slate-100"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </motion.div>
-                  <h3 className="text-base font-semibold text-white mb-1 text-display">
-                    {feature.title}
-                  </h3>
-                  <p className="text-slate-400 text-sm leading-relaxed">{feature.description}</p>
+              <ThreeDCard key={i} className="group cursor-pointer">
+                <div className="relative p-4 sm:p-6 rounded-xl border border-white/[0.08] bg-white/[0.02] backdrop-blur-sm overflow-hidden transition-all duration-500 group-hover:border-white/20 flex sm:block items-center gap-4">
+                  {/* Gradient bg on hover */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-xl`} />
+
+                  {/* Glow dot — desktop only */}
+                  <div className="hidden sm:block absolute top-4 right-4 w-1.5 h-1.5 rounded-full bg-white/20 group-hover:bg-white/60 transition-colors duration-300" />
+
+                  <div className="relative z-10 flex sm:block items-center gap-4 w-full">
+                    <div
+                      className={`flex-shrink-0 mb-0 sm:mb-5 inline-flex p-2.5 sm:p-3 rounded-xl bg-gradient-to-br ${feature.color} bg-opacity-10`}
+                      style={{ boxShadow: `0 0 20px ${feature.glow}` }}
+                    >
+                      <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div className="text-left sm:text-left">
+                      <h3 className="text-sm font-semibold text-white mb-0.5 sm:mb-1.5 tracking-tight">{feature.title}</h3>
+                      <p className="text-white/40 text-xs">{feature.description}</p>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
                 </div>
-              </motion.div>
+              </ThreeDCard>
             )
           })}
         </motion.div>
 
-
-        {/* Premium CTA Buttons */}
-        <motion.div
-          variants={itemVariants}
-          className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20"
-        >
+        {/* CTA Buttons */}
+        <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-12 sm:mb-20">
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-3 rounded-lg bg-white text-black font-semibold flex items-center gap-2 hover:bg-slate-100 transition-colors"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            className="relative group w-full sm:w-auto px-8 py-3.5 rounded-xl overflow-hidden"
           >
-            <span>Explore Projects</span>
-            <ArrowRight className="w-4 h-4" />
+            <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-blue-600 transition-all duration-300 group-hover:from-violet-500 group-hover:to-blue-500" />
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-blue-600 blur-xl" />
+            </div>
+            <span className="relative flex items-center justify-center gap-2 text-white font-semibold text-sm">
+              Explore Projects
+              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+            </span>
           </motion.button>
+
           <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="px-8 py-3 rounded-lg border border-slate-600 text-white font-semibold hover:border-slate-500 hover:bg-slate-900/50 transition-colors"
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.97 }}
+            className="relative group w-full sm:w-auto px-8 py-3.5 rounded-xl border border-white/10 bg-white/[0.03] backdrop-blur-sm hover:border-white/20 hover:bg-white/[0.06] transition-all duration-300"
           >
-            Get in Touch
+            <span className="text-white/70 font-semibold text-sm group-hover:text-white transition-colors">Get in Touch</span>
           </motion.button>
         </motion.div>
 
-        {/* Premium Stats Section */}
+        {/* Stats — always 3 cols but smaller text on mobile */}
         <motion.div
           variants={itemVariants}
-          className="grid grid-cols-3 gap-6 max-w-3xl mx-auto pt-8 border-t border-slate-800"
+          className="grid grid-cols-3 gap-3 sm:gap-6 max-w-sm sm:max-w-2xl mx-auto"
         >
           {[
-            { value: '10M+', label: 'Records Processed', link: '#data-pipeline' },
-            { value: '20+', label: 'AI Projects', link: '#projects' },
-            { value: '40%', label: 'Accuracy Improvement', link: '#rag-enterprise' },
+            { value: '10M+', label: 'Records Processed', href: '#data-pipeline' },
+            { value: '20+', label: 'AI Projects', href: '#projects' },
+            { value: '40%', label: 'Accuracy Boost', href: '#rag-enterprise' },
           ].map((stat, i) => (
             <motion.a
               key={i}
-              href={stat.link}
-              whileHover={{ scale: 1.05 }}
-              className="py-6 text-center cursor-pointer transition-all hover:bg-slate-800/30 rounded-lg"
+              href={stat.href}
+              className="group relative py-4 sm:py-6 px-2 sm:px-4 rounded-xl border border-white/[0.06] bg-white/[0.02] backdrop-blur-sm hover:border-white/15 hover:bg-white/[0.05] transition-all duration-300 cursor-pointer text-center overflow-hidden"
+              whileHover={{ y: -3 }}
             >
-              <div className="text-2xl md:text-3xl font-bold text-white mb-1">
-                {stat.value}
+              <div className="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="relative">
+                <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">
+                  {stat.value}
+                </div>
+                <div className="text-[8px] sm:text-[10px] text-white/30 font-medium tracking-widest uppercase">{stat.label}</div>
               </div>
-              <div className="text-xs text-slate-500 font-medium tracking-wide uppercase">{stat.label}</div>
             </motion.a>
           ))}
         </motion.div>
       </motion.div>
 
-      {/* Animated Scroll Indicator */}
+      {/* Scroll Indicator — hidden on short mobile screens */}
       <motion.div
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20"
-        animate={{ y: [0, 8, 0] }}
-        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        className="hidden sm:flex absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex-col items-center gap-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
       >
+        <motion.p className="text-[10px] tracking-widest text-white/20 uppercase">Scroll</motion.p>
         <motion.div
-          className="w-6 h-10 border border-slate-600/50 rounded-full flex justify-center p-2 hover:border-slate-500 transition-colors"
-          whileHover={{ scale: 1.1 }}
-        >
-          <motion.div
-            className="w-1 h-2 bg-slate-500 rounded-full"
-            animate={{ y: [0, 4, 0] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </motion.div>
+          className="w-px h-12 bg-gradient-to-b from-white/20 to-transparent"
+          animate={{ scaleY: [1, 0.5, 1], opacity: [0.4, 1, 0.4] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </motion.div>
     </div>
   )
